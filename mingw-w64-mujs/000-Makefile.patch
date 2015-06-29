@@ -1,0 +1,11 @@
+--- mujs-source/Makefile	2014-09-24 09:02:04.000000000 -0500
++++ mujs-source/Makefile.new	2014-12-15 23:07:08.080461500 -0600
+@@ -7,7 +7,7 @@ bindir ?= $(prefix)/bin
+ incdir ?= $(prefix)/include
+ libdir ?= $(prefix)/lib
+ 
+-CC := clang
++CC := gcc
+ CFLAGS := -std=c99 -pedantic -Wall -Wextra -Wno-unused-parameter -Wunreachable-code
+ 
+ ifeq "$(build)" "debug"

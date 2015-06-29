@@ -1,0 +1,20 @@
+--- mupdf-qt-source/cmake/FindMuPDF.cmake	2014-09-22 02:44:08.000000000 -0500
++++ mupdf-qt-source/cmake/FindMuPDF.cmake.new	2014-12-15 04:42:16.583949800 -0600
+@@ -35,7 +35,7 @@
+         set (MuPDF_LIBRARY_PATH ${MuPDF_SOURCE_DIR}/platform/win32/Release)
+     endif ()
+ else ()
+-    set (MuPDF_LIBRARY_COMPONENTS mupdf mujs jbig2dec jpeg openjpeg z)
++    set (MuPDF_LIBRARY_COMPONENTS mupdf mujs jbig2dec jpeg openjp2 z)
+     if (NOT UNIX) # Use provided freetype library
+         set (MuPDF_LIBRARY_COMPONENTS ${MuPDF_LIBRARY_COMPONENTS} freetype)
+     endif ()
+@@ -48,7 +48,7 @@
+ foreach (MuPDF_LIBRARY_COMPONENT ${MuPDF_LIBRARY_COMPONENTS})
+     find_library (${MuPDF_LIBRARY_COMPONENT}_LIB
+         ${MuPDF_LIBRARY_COMPONENT}
+-        PATHS ${MuPDF_LIBRARY_PATH}
++        PATHS ${MuPDF_LIBRARY_PATH} ${MORE_LIB_PATHS}
+         NO_DEFAULT_PATH)
+     if (NOT ${MuPDF_LIBRARY_COMPONENT}_LIB)
+         message (FATAL_ERROR "Library " ${MuPDF_LIBRARY_COMPONENT} " not found in " ${MuPDF_LIBRARY_PATH})

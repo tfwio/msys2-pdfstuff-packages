@@ -1,0 +1,4 @@
+pushd src &> /dev/null
+diff -u podofo-0.9.3/src/CMakeLists.txt podofo-0.9.3/src/CMakeLists.new.txt > ../001-rc.patch
+md5sum ../001-rc.patch
+popd &> /dev/null

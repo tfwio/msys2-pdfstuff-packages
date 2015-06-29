@@ -1,0 +1,33 @@
+--- mupdf-1.6-source/Makethird	2014-09-30 06:25:12.000000000 -0500
++++ mupdf-1.6-source/Makethird.new	2014-12-15 21:44:25.344467200 -0600
+@@ -9,7 +9,6 @@
+ FREETYPE_DIR := thirdparty/freetype
+ JBIG2DEC_DIR := thirdparty/jbig2dec
+ JPEG_DIR := thirdparty/jpeg
+-MUJS_DIR := thirdparty/mujs
+ OPENJPEG_DIR := thirdparty/openjpeg/libopenjpeg
+ OPENSSL_DIR := thirdparty/openssl
+ ZLIB_DIR := thirdparty/zlib
+@@ -48,22 +47,7 @@ endif
+ 
+ # --- MuJS ---
+ 
+-ifneq "$(wildcard $(MUJS_DIR)/README)" ""
+-
+-MUJS_LIB := $(OUT)/libmujs.a
+-MUJS_OUT := $(OUT)/mujs
+-MUJS_SRC := one.c
+-
+-$(MUJS_LIB): $(addprefix $(MUJS_OUT)/, $(MUJS_SRC:%.c=%.o))
+-$(MUJS_OUT):
+-	$(MKDIR_CMD)
+-$(MUJS_OUT)/%.o: $(MUJS_DIR)/%.c | $(MUJS_OUT)
+-	$(CC_CMD)
+-
+-MUJS_CFLAGS := -I$(MUJS_DIR)
+-
+ HAVE_MUJS := yes
+-endif
+ 
+ # --- FreeType 2 ---
+ 

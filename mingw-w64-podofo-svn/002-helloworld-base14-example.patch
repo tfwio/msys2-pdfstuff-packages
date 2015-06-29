@@ -1,0 +1,11 @@
+--- podofo-0.9.3/examples/helloworld-base14/helloworld-base14.cpp	2014-12-13 13:34:10.032411100 -0600
++++ podofo-0.9.3/examples/helloworld-base14/helloworld-base14.cpp.new	2014-12-13 13:34:28.619474200 -0600
+@@ -28,7 +28,7 @@
+ /* Include appropriate system header for standard integer types
+ */
+ #ifdef _WIN32
+-#include <BaseTsd.h>
++#include <basetsd.h>
+ #else
+ #include <stdint.h>
+ #endif

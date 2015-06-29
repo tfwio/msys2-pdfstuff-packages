@@ -1,0 +1,209 @@
+# Maintainer: tfwroble <@gmail.com>
+
+_realname=mupdf-qt-git
+
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=1.6
+pkgrel=0
+pkgdesc='Lightweight PDF and XPS viewer'
+arch=('any')
+url='http://mupdf.com'
+license=('GPL3')
+
+SHA1=f61a5f7d88dd9ca728d47cebe6ac790f0c1c43ba
+
+options=(!strip !purge libtool staticlibs)
+
+source=("https://github.com/xiangxw/mupdf-qt/archive/$SHA1.tar.gz"
+        "000-FindMuPDF.patch"
+        "001-CMakeLists.patch")
+
+dfile=mupdf-qt-f61a5f7d88dd9ca728d47cebe6ac790f0c1c43ba
+
+depends=("$MINGW_PACKAGE_PREFIX-curl"
+         "$MINGW_PACKAGE_PREFIX-mujs"
+         "$MINGW_PACKAGE_PREFIX-mupdf"
+         "$MINGW_PACKAGE_PREFIX-freetype"
+         "$MINGW_PACKAGE_PREFIX-libjpeg"
+         "$MINGW_PACKAGE_PREFIX-openssl"
+         "$MINGW_PACKAGE_PREFIX-openjpeg2")
+
+md5sums=('f5e7d9ffaf03c3f2c54a0093ce624738'
+         'SKIP'
+         'SKIP')
+
+makedepends=("${MINGW_PACKAGE_PREFIX}-gcc")
+
+prepare_init ()
+{
+  if [[ ! "x${has_pkg_helper}" == "true" ]]; then
+    . ${startdir}/../common/pkg-helper.sh
+  fi
+  local_paths $1
+}
+
+prepare ()
+{
+  prepare_init 1
+
+  # variable: 'root'
+  pushd $startdir/.. > /dev/null; root=`pwd`; popd > /dev/null
+
+  # remove source location
+  if [ -d ${srcdir}/mupdf-qt-source ]; then rm -drf ${srcdir}/mupdf-qt-source; fi
+  
+  # restore source location
+  mv mupdf-qt-f61a5f7d88dd9ca728d47cebe6ac790f0c1c43ba ${srcdir}/mupdf-qt-source
+
+  # enter source location, apply patches
+  pushd ${srcdir}/mupdf-qt-source > /dev/null
+    patch -p1 -i $srcdir/000-FindMuPDF.patch > /dev/null
+    patch -p1 -i $srcdir/001-CMakeLists.patch > /dev/null
+  popd > /dev/null
+
+  # var: mudra
+  # this is where, if installed, mupdf.h is---for use in CFLAGS.
+  pushd $MINGW_PREFIX/include/mupdf; mudra=`pwd -W`; popd > /dev/null
+
+  # remove and restore build-directory
+  if [[ -d ${srcdir}/build-${CARCH} ]]; then rm -drf ${srcdir}/build-${CARCH}; fi
+  mkdir -p ${srcdir}/build-${CARCH}
+}
+# - prepare (create) destination directories
+# - create non-existing [$dirout]/bin, lib and include directories, ...
+# - clone exe, dll, a and h files from /build-$CARCH/...
+# see: do_review do_moo
+do_pack()
+{
+  echo -- begin packing=$1
+  # WTF?
+  cd $1
+  dirout=${pkgdir}${MINGW_PREFIX}
+  mkdir -p $dirout/bin $dirout/lib $dirout/include
+  do_review exe $srcdir/build-$CARCH/bin          $dirout/bin
+  do_review dll $srcdir/build-$CARCH/bin          $dirout/bin
+  do_review a   $srcdir/build-$CARCH/lib          $dirout/lib
+  do_review h   ${srcdir}/mupdf-qt-source/include $dirout/include/mupdf-qt
+  echo -- done packing
+}
+
+# Modify/Store "$hasfile" (Environment Variable)
+# Check directory $2 for files with extension $1.
+# see do_pack do_review
+do_moo()
+{
+  hasfile=false
+  for f in $2/*.$1; do
+    if [[ -f $f ]]; then hasfile=true; break; fi
+  done
+}
+# see: do_pack do_moo
+do_review() #1 extension #2 source #3 destination (directory)
+{
+  do_moo $1 $2
+  if [[ $hasfile == false ]]; then return 0; fi
+  if [[ ! -d $3 ]]; then mkdir -p $3; fi
+  echo --- copying $1 files...
+  cp -f $2/*.$1 $3
+}
+
+# Force and/or revert STATIC vs DYNAMIC linking during compilation.
+# -----------------------------------------------------------------
+# - backup CMakeLists.txt (appending '.old' extension)
+# - patch CMakeLists.
+# 
+# see: do_list_revert
+do_list_shared()
+{
+  mv -f \
+    $srcdir/mupdf-qt-source/CMakeLists.txt \
+    $srcdir/mupdf-qt-source/CMakeLists.txt.old
+  sed "s|STATIC|SHARED|g" < \
+    "$srcdir/mupdf-qt-source/CMakeLists.txt.old" > \
+    "$srcdir/mupdf-qt-source/CMakeLists.txt"
+}
+
+# only to be called after prior call to do_list_shared.
+# see: do_list_shared
+do_list_revert()
+{
+  echo -- revertig cmake-list
+  mv -f $srcdir/mupdf-qt-source/CMakeLists.txt.old $srcdir/mupdf-qt-source/CMakeLists.txt
+}
+
+build()
+{
+  pushd ${srcdir}/build-${CARCH} > /dev/null
+
+    pushd $MINGW_PREFIX/lib > /dev/null
+      mwlib=`pwd -W` # shouldn't this be standard? Is this necessary?
+    popd > /dev/null
+    
+    echo -- BUILDING SHARED LIBRARY
+    # only build shared
+
+      do_list_shared
+      echo "PACKAGE-DESTINATION: ${pkgdest}"
+      cmake -G "MSYS Makefiles" -Wno-dev \
+        -DMORE_LIB_PATHS="$mwlib" \
+        -DCMAKE_INSTALL_PREFIX=${pkgdest} \
+        -DCMAKE_BUILD_TYPE=Release -DMuPDF_BUILD_TYPE=Release \
+        ${srcdir}/mupdf-qt-source
+
+      make
+      sleep 1
+      do_pack ${srcdir}/build-${CARCH}
+      sleep 1
+      
+      # copy binaries to ${pkgdest} at some point?
+
+    # prep static build
+
+    #  if [ -d ${srcdir}/build-${CARCH} ]; then rm -drf ${srcdir}/build-${CARCH}; fi
+    #  mkdir -p ${srcdir}/build-${CARCH}
+    #
+    #echo -- BUILDING STATIC LIBRARY
+    #  do_list_revert
+    #  cmake -G "MSYS Makefiles" -Wno-dev \
+    #    -DMORE_LIB_PATHS="$mwlib" \
+    #    -DCMAKE_INSTALL_PREFIX=${pkgdest} \
+    #    -DCMAKE_BUILD_TYPE=Release \
+    #    -DMuPDF_BUILD_TYPE=Release \
+    #    ${srcdir}/mupdf-qt-source
+    #  
+    #  make
+    #  sleep 1
+    #  do_pack ${srcdir}/build-${CARCH}
+    #  sleep 1
+    
+  popd > /dev/null
+}
+
+package() {
+  :
+  # note-a
+  dirout=${pkgdir}${MINGW_PREFIX}
+  echo "CARCH: ${CARCH}"
+  echo "arch: ${arch}"
+  echo "MINGW_PREFIX: ${MINGW_PREFIX}"
+  echo "MSYSTEM: ${MSYSTEM}"
+  echo "DIROUT: ${dirout}"
+  echo "PKGDIR: ${pkgdir}"
+  echo "srcdir: ${srcdir}"
+  do_pack 
+  # ref
+  # (root=.../msys-work/w64/[pkg-name=mingw-w64-mupdf-qt])
+  # -> builddir   : ${root}/src/build-i686
+  # -> ifix       : [msys2-path]/mingw32/bin
+  # -> pkgdest    : ${root}/pkg/mingw-w64-i686-mupdf-qt-git/mingw32
+  # -> pkgdir     : ${root}/pkg/mingw-w64-i686-mupdf-qt-git
+  # -> prefix     : ${root}/src/build-i686
+  # -> srcdir     : ${root}/src
+  # -> startdir   : ${root}
+  # -> workdir    : ${root}/src/work-i686
+  # -> WMD        : [msys2-path]/msys2_x86_64/mingw32
+  # echo nothing to do
+  # TODO: sed "s|$root|\$\{MyPlace\}|Ig" \
+  #  <src/build-x86_64/cmake_install.cmake.new> \
+  #   src/build-x86_64/cmake_install.cmake.newer
+}

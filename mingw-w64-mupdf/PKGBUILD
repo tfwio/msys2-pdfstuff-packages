@@ -1,0 +1,323 @@
+# Maintainer: Thomas Wroble <tfwroble@gmail.com>
+_realname=mupdf
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=1.6
+pkgrel=0
+pkgdesc='Lightweight PDF and XPS viewer'
+arch=('any')
+url='http://mupdf.com'
+license=('GPL3')
+
+SOURCE_WWW="http://mupdf.com/downloads/mupdf-$pkgver-source.tar.gz"
+SOURCE_LOCAL="mupdf-1.6-source.tar.gz"
+
+source=("${SOURCE_LOCAL}"
+        "000-fitz-load-jpx_c.patch"
+        "001-Makethird.patch")
+md5sums=('8d69db41ae9e0b6807b76bb6ed70dc2f'
+         '0a91e4dba1597b0f4b07785a5323d782'
+         '976d143cf70d54a7e9062da3db06d9b0')
+# 'staticlibs' 'libtool'
+options=(strip !purge staticlibs)
+depends=("$MINGW_PACKAGE_PREFIX-curl"
+         "$MINGW_PACKAGE_PREFIX-freetype"
+         "$MINGW_PACKAGE_PREFIX-libjpeg"
+         "$MINGW_PACKAGE_PREFIX-mujs"
+         "$MINGW_PACKAGE_PREFIX-openssl"
+         "$MINGW_PACKAGE_PREFIX-openjpeg2")
+makedepends=("${MINGW_PACKAGE_PREFIX}-gcc")
+
+
+plain() {
+  local mesg=$1; shift
+  printf "${BOLD}    ${mesg}${ALL_OFF}\n" "$@" >&2
+}
+
+print_warning() {
+  local mesg=$1; shift
+  printf "${YELLOW}=> WARNING:${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
+}
+
+print_msg1() {
+  local mesg=$1; shift
+  printf "${GREEN}==> ${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
+}
+
+print_msg2() {
+  local mesg=$1; shift
+  printf "${BLUE}  ->${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
+}
+
+print_error() {
+  local mesg=$1; shift
+  printf "${RED}==> ERROR:${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
+}
+
+local_paths ()
+{
+  # . ${startdir}/helper.sh
+  print_msg1 "setting local paths"
+  print_msg2 "CARCH: $CARCH"
+  print_msg2 "CHOST: $CHOST"
+  print_msg2 "MINGW_PREFIX: $MINGW_PREFIX"
+  print_msg2 "MINGW_CHOST: $MINGW_CHOST"
+  
+  pushd $MINGW_PREFIX/bin > /dev/null; ifix=`pwd -W`; popd > /dev/null
+  pushd $MINGW_PREFIX > /dev/null; WMD=`pwd -W`; popd
+  workdir=${startdir}/src/work-${CARCH}
+  pkgdir=${startdir}/pkg/${pkgname}
+  builddir=${startdir}/src/build-${CARCH}
+  pkgdest=${pkgdir}${MINGW_PREFIX}
+  prefix=${builddir}
+
+  if [[ "x$1" == "x1" ]]; then
+    print_msg2 "builddir   : ${builddir}"
+    print_msg2 "ifix       : ${ifix}"
+    print_msg2 "pkgdest    : ${pkgdest}"
+    print_msg2 "pkgdir     : ${pkgdir}"
+    print_msg2 "prefix     : ${prefix}"
+    print_msg2 "srcdir     : ${srcdir}"
+    print_msg2 "startdir   : ${startdir}"
+    print_msg2 "workdir    : ${workdir}"
+    print_msg2 "WMD        : ${WMD}"
+  fi
+  pathsloaded=true
+}
+
+prepare_dirs ()
+{
+  if [[ -d ${builddir} ]]; then
+    print_msg1 'remove build directory' #green
+    rm -drf ${builddir}
+  else
+    print_warning 'no build directory to remove' # yellow
+  fi
+  if [[ -d ${workdir} ]]; then
+    print_msg1 'remove work directory' #green
+    rm -drf ${workdir}
+  else
+    print_warning 'no work directory to remove' # yellow
+  fi
+  if [[ -d ${pkgdest} ]]; then
+    print_msg1 'remove pkgdest directory' #green
+    rm -drf ${pkgdest}
+  else
+    print_warning 'no work directory to remove' # yellow
+  fi
+}
+
+prepare ()
+{
+  local_paths 1
+  prepare_dirs
+  # workdir exists # mkdir -p ${workdir}
+
+  # this is pointing to a particular file.
+  print_msg2 'moving sources to workdir'
+  mv ${srcdir}/${_realname}-${pkgver}-source ${workdir}
+  
+  pushd ${workdir} > /dev/null # for patching
+    patch -p1 -i ${srcdir}/000-fitz-load-jpx_c.patch
+    patch -p1 -i ${srcdir}/001-Makethird.patch
+    rm -rf thirdparty/{curl,mujs,freetype,zlib,jpeg,openjpeg}
+  popd
+
+}
+
+build()
+{
+  if [[ ! "x${pathsloaded}" == "true" ]]; then local_paths 1; fi
+  # mupdf is known only to compile a static library.
+  pushd "${workdir}" > /dev/null
+    # --------------------------------------
+    # set environment flags for compilation
+    # --------------------------------------
+    CC=${ifix}/gcc; LD=${ifix}/ld; AR=${ifix}/ar; CXX=${ifix}/g++; LIBTOOL=${ifix}/libtool;
+    XLIBS="-L${MINGW_PREFIX}/lib  `pkg-config --libs --static zlib libopenjp2 freetype2` -ljpeg" \
+    XCFLAGS="`pkg-config --cflags zlib libopenjp2 freetype2`"
+    MUJS_LIBS=-lmujs
+    # --------------------------------------
+    NOX11=yes
+    verbose=yes
+    export CC LD AR CXX LIBTOOL XCFLAGS
+    # --------------------------------------
+    # the beolow is defined in the prepare_dirs function.
+    # prefix="${pkgdir}${MINGW_PREFIX}"
+    # --------------------------------------
+    # this can't be all that is needed!
+    # --------------------------------------
+    make install build=release verbose="${verbose}" \
+      prefix="${builddir}" \
+      XCFLAGS="$XCFLAGS" \
+      XLIBS="$XLIBS" \
+      MUJS_LIBS="$MUJS_LIBS" \
+      NOX11="$NOX11"
+    # --------------------------------------
+    # copy and missing files that may not have been installed.
+    ## cp build/release/libjbig2dec.a $prefix/lib
+    # --------------------------------------
+  popd > /dev/null
+}
+
+package() {
+  if [[ ! "x${pathsloaded}" == "true" ]]; then local_paths 1; fi
+  print_msg2 "pkgdir=${pkgdir}"
+  if [[ -d ${pkgdest} ]]; then rm -drf ${pkgdest}; fi
+  mkdir -p ${pkgdest}
+
+  print_msg1 "copying files..."
+  print_msg1 cmd="cp -r ${builddir}/* ${pkgdest}"
+
+
+  # cp ${workdir}/build/release/libjbig2dec.a .
+  # cp ${workdir}/build/release/libjbig2dec.a ${pkgdest}/lib/.
+  cp -r ${builddir}/* ${pkgdest}
+  
+  # MINGW_PREFIX=mingw32 or mingw64
+  dest=${pkgdir}/${MINGW_PREFIX}
+  if [ ! -d ${dest} ]; then mkdir -p ${dest}; fi
+  fname=${workdir}/build/release/libjbig2dec.a
+  fdest=${dest}/lib/
+  cp ${fname} ${fdest}
+}
+
+# Note the important bit here:
+# D:/DEV/BIN/msys2_x86_64/mingw32/bin/ar cr build/release/libmupdf.a \
+#    build/release/fitz/trace-device.o                               \
+#    build/release/fitz/test-device.o                                \
+#    build/release/fitz/list-device.o                                \
+#    build/release/fitz/document-all.o                               \
+#    build/release/fitz/jmemcust.o                                   \
+#    build/release/fitz/transition.o                                 \
+#    build/release/fitz/stext-device.o                               \
+#    build/release/fitz/printf.o                                     \
+#    build/release/fitz/stext-search.o                               \
+#    build/release/fitz/text.o                                       \
+#    build/release/fitz/image.o                                      \
+#    build/release/fitz/output.o                                     \
+#    build/release/fitz/draw-mesh.o                                  \
+#    build/release/fitz/ftoa.o                                       \
+#    build/release/fitz/bbox-device.o                                \
+#    build/release/fitz/crypt-sha2.o                                 \
+#    build/release/fitz/filter-fax.o                                 \
+#    build/release/fitz/stream-read.o                                \
+#    build/release/fitz/draw-edge.o                                  \
+#    build/release/fitz/load-jpx.o                                   \
+#    build/release/fitz/memento.o                                    \
+#    build/release/fitz/shade.o                                      \
+#    build/release/fitz/filter-predict.o                             \
+#    build/release/fitz/bitmap.o                                     \
+#    build/release/fitz/document-no-run.o                            \
+#    build/release/fitz/draw-affine.o                                \
+#    build/release/fitz/time.o                                       \
+#    build/release/fitz/font.o                                       \
+#    build/release/fitz/buffer.o                                     \
+#    build/release/fitz/crypt-md5.o                                  \
+#    build/release/fitz/output-pwg.o                                 \
+#    build/release/fitz/filter-lzw.o                                 \
+#    build/release/fitz/document.o                                   \
+#    build/release/fitz/memory.o                                     \
+#    build/release/fitz/path.o                                       \
+#    build/release/fitz/context.o                                    \
+#    build/release/fitz/draw-paint.o                                 \
+#    build/release/fitz/compressed-buffer.o                          \
+#    build/release/fitz/device.o                                     \
+#    build/release/fitz/xml.o                                        \
+#    build/release/fitz/draw-unpack.o                                \
+#    build/release/fitz/store.o                                      \
+#    build/release/fitz/draw-glyph.o                                 \
+#    build/release/fitz/stream-prog.o                                \
+#    build/release/fitz/halftone.o                                   \
+#    build/release/fitz/tree.o                                       \
+#    build/release/fitz/filter-dct.o                                 \
+#    build/release/fitz/hash.o                                       \
+#    build/release/fitz/svg-device.o                                 \
+#    build/release/fitz/glyph.o                                      \
+#    build/release/fitz/function.o                                   \
+#    build/release/fitz/filter-flate.o                               \
+#    build/release/fitz/load-tiff.o                                  \
+#    build/release/fitz/link.o                                       \
+#    build/release/fitz/ucdn.o                                       \
+#    build/release/fitz/stext-paragraph.o                            \
+#    build/release/fitz/colorspace.o                                 \
+#    build/release/fitz/draw-blend.o                                 \
+#    build/release/fitz/load-jxr.o                                   \
+#    build/release/fitz/draw-scale-simple.o                          \
+#    build/release/fitz/strtod.o                                     \
+#    build/release/fitz/draw-path.o                                  \
+#    build/release/fitz/pixmap.o                                     \
+#    build/release/fitz/stream-open.o                                \
+#    build/release/fitz/load-jpeg.o                                  \
+#    build/release/fitz/filter-jbig2.o                               \
+#    build/release/fitz/error.o                                      \
+#    build/release/fitz/filter-leech.o                               \
+#    build/release/fitz/load-png.o                                   \
+#    build/release/fitz/filter-basic.o                               \
+#    build/release/fitz/getopt.o                                     \
+#    build/release/fitz/geometry.o                                   \
+#    build/release/fitz/output-pcl.o                                 \
+#    build/release/fitz/crypt-arc4.o                                 \
+#    build/release/fitz/stext-output.o                               \
+#    build/release/fitz/string.o                                     \
+#    build/release/fitz/outline.o                                    \
+#    build/release/fitz/crypt-aes.o                                  \
+#    build/release/fitz/draw-device.o                                \
+#    build/release/pdf/pdf-appearance.o                              \
+#    build/release/pdf/pdf-page.o                                    \
+#    build/release/pdf/pdf-fontfile.o                                \
+#    build/release/pdf/pdf-clean.o                                   \
+#    build/release/pdf/pdf-interpret.o                               \
+#    build/release/pdf/pdf-device.o                                  \
+#    build/release/pdf/pdf-image.o                                   \
+#    build/release/pdf/pdf-function.o                                \
+#    build/release/pdf/pdf-shade.o                                   \
+#    build/release/pdf/pdf-lex.o                                     \
+#    build/release/pdf/pdf-annot-edit.o                              \
+#    build/release/pdf/pdf-event.o                                   \
+#    build/release/pdf/pdf-object.o                                  \
+#    build/release/pdf/pdf-unicode.o                                 \
+#    build/release/pdf/pdf-xref-aux.o                                \
+#    build/release/pdf/pdf-repair.o                                  \
+#    build/release/pdf/pdf-cmap-table.o                              \
+#    build/release/pdf/pdf-xref.o                                    \
+#    build/release/pdf/pdf-op-run.o                                  \
+#    build/release/pdf/pdf-annot.o                                   \
+#    build/release/pdf/pdf-write.o                                   \
+#    build/release/pdf/pdf-crypt.o                                   \
+#    build/release/pdf/pdf-colorspace.o                              \
+#    build/release/pdf/pdf-pattern.o                                 \
+#    build/release/pdf/pdf-stream.o                                  \
+#    build/release/pdf/pdf-run.o                                     \
+#    build/release/pdf/pdf-op-buffer.o                               \
+#    build/release/pdf/pdf-form.o                                    \
+#    build/release/pdf/pdf-encoding.o                                \
+#    build/release/pdf/pdf-parse.o                                   \
+#    build/release/pdf/pdf-op-filter.o                               \
+#    build/release/pdf/pdf-outline.o                                 \
+#    build/release/pdf/pdf-xobject.o                                 \
+#    build/release/pdf/pdf-cmap-load.o                               \
+#    build/release/pdf/pdf-font.o                                    \
+#    build/release/pdf/pdf-store.o                                   \
+#    build/release/pdf/pdf-metrics.o                                 \
+#    build/release/pdf/pdf-pkcs7.o                                   \
+#    build/release/pdf/pdf-type3.o                                   \
+#    build/release/pdf/pdf-field.o                                   \
+#    build/release/pdf/pdf-cmap.o                                    \
+#    build/release/pdf/pdf-cmap-parse.o                              \
+#    build/release/pdf/pdf-nametree.o                                \
+#    build/release/pdf/js/pdf-js.o                                   \
+#    build/release/pdf/js/pdf-jsimp-mu.o                             \
+#    build/release/xps/xps-glyphs.o                                  \
+#    build/release/xps/xps-image.o                                   \
+#    build/release/xps/xps-resource.o                                \
+#    build/release/xps/xps-doc.o                                     \
+#    build/release/xps/xps-tile.o                                    \
+#    build/release/xps/xps-common.o                                  \
+#    build/release/xps/xps-zip.o                                     \
+#    build/release/xps/xps-outline.o                                 \
+#    build/release/xps/xps-util.o                                    \
+#    build/release/xps/xps-gradient.o                                \
+#    build/release/xps/xps-path.o                                    \
+#    build/release/cbz/mucbz.o                                       \
+#    build/release/img/muimage.o                                     \
+#    build/release/tiff/mutiff.o                                     \

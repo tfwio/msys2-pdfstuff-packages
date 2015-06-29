@@ -1,0 +1,40 @@
+--- podofo/src/doc/PdfPainter.cpp	2014-12-28 06:01:29.129505800 -0600
++++ podofo/src/doc/PdfPainter.cpp.new	2014-12-28 06:15:32.909767200 -0600
+@@ -1739,8 +1739,8 @@ void PdfPainter::SetTransformationMatrix
+ {
+     PODOFO_RAISE_LOGIC_IF( !m_pCanvas, "Call SetPage() first before doing drawing operations." );
+ 
+-	// Need more precision for transformation-matrix !!
+-	std::streamsize oldPrecision = m_oss.precision(clPainterHighPrecision);
++    // Need more precision for transformation-matrix !!
++    std::streamsize oldPrecision = m_oss.precision(clPainterHighPrecision);
+     m_oss.str("");
+     m_oss << a << " "
+           << b << " "
+@@ -1748,7 +1748,25 @@ void PdfPainter::SetTransformationMatrix
+           << d << " "
+           << e << " "
+           << f << " cm" << std::endl;
+-	m_oss.precision(oldPrecision);
++    m_oss.precision(oldPrecision);
++
++    m_pCanvas->Append( m_oss.str() );
++}
++
++void PdfPainter::SetTextMatrix( double a, double b, double c, double d, double e, double f )
++{
++    PODOFO_RAISE_LOGIC_IF( !m_pCanvas, "Call SetPage() first before doing drawing operations." );
++
++    // Need more precision for transformation-matrix !!
++    std::streamsize oldPrecision = m_oss.precision(clPainterHighPrecision);
++    m_oss.str("");
++    m_oss << a << " "
++          << b << " "
++          << c << " "
++          << d << " "
++          << e << " "
++          << f << " Tm" << std::endl;
++    m_oss.precision(oldPrecision);
+ 
+     m_pCanvas->Append( m_oss.str() );
+ }

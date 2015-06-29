@@ -1,0 +1,189 @@
+# Maintainer: tfwroble <@gmail.com>
+if [ -z "${WANT_STATIC}" ]; then WANT_STATIC=FALSE; fi
+_realname=podofo
+if [ ${WANT_STATIC} = 'TRUE' ] || [ ${WANT_STATIC} = 'true' ]; then
+  _realname=${_realname}-static
+fi
+pkgdesc="A PDF parsing, modification and creation library."
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}-svn"
+pkgrel=1
+
+# the name 'pkgver' is conflicting with a function which follows.
+# ----------------------------------------------
+pkgver=r1671
+_revision=r1671
+# ----------------------------------------------
+
+# Compile shared library by default.
+# if [ -z "${WANT_SHARED}" ]; then WANT_SHARED=TRUE; fi
+if [ -z "${WANT_STATIC}" ]; then WANT_STATIC=FALSE; fi
+# If you want static, set this when calling makepkg-mingw as follows...
+# (also to overwrite the existing package)
+# 'WANT_STATIC=FALSE makepkg-mingw --force'
+
+
+_fragment=
+
+# colourize.sh
+# https://wiki.archlinux.org/index.php/Color_Bash_Prompt
+msg_clr () { #colour #title #message
+  clr=$1; shift 1
+  title=$1; shift 1
+  printf "\e[1;${clr}${title}\e[0m \e[1;37m${*}\e[0m\n"
+}
+
+msg_r () { #title #message
+  msg=$1; shift 1; msg_clr '31m' "${msg}" "${*}" # red
+}
+msg_g () { #title #message
+  msg=$1; shift 1; msg_clr '32m' "${msg}" "${*}" # green
+}
+msg_y () { #title #message
+  msg=$1; shift 1; msg_clr '33m' "${msg}" "${*}" # yellow
+}
+msg_b () { #title #message
+  msg=$1; shift 1; msg_clr '34m' "${msg}" "${*}" # blue
+}
+msg_m () { #title #message
+  msg=$1; shift 1; msg_clr '35m' "${msg}" "${*}" # magenta
+}
+msg_c () { #title #message
+  msg=$1; shift 1; msg_clr '36m' "${msg}" "${*}" # cyan
+}
+
+
+if [ "${_variant}" = "-static" ]; then _namesuff="-static"; else _namesuff= ; fi
+[[ -n ${_revision} ]] && _fragment="#revision=${_revision}${_fragment}"
+
+arch=('any')
+url="http://sourceforge.net/projects/podofo/"
+license=("GPL")
+
+# optional-makedepends: "${MINGW_PACKAGE_PREFIX}-boost"
+makedepends=('subversion'
+             "${MINGW_PACKAGE_PREFIX}-pkg-config"
+             "${MINGW_PACKAGE_PREFIX}-lua"
+             "${MINGW_PACKAGE_PREFIX}-gcc"
+             "${MINGW_PACKAGE_PREFIX}-cmake")
+depends=("${MINGW_PACKAGE_PREFIX}-libtiff"
+         "${MINGW_PACKAGE_PREFIX}-freetype"
+         "${MINGW_PACKAGE_PREFIX}-libpng"
+         "${MINGW_PACKAGE_PREFIX}-libjpeg"
+         "${MINGW_PACKAGE_PREFIX}-zlib"
+         "${MINGW_PACKAGE_PREFIX}-cppunit")
+
+options=(!strip staticlibs libtool)
+source=("${_realname}"::"svn+http://svn.code.sf.net/p/podofo/code/podofo/trunk/"
+        '000-cmake-cppunit.patch'
+        '000-PdfPainter.cpp.patch'
+        '000-PdfPainter.h.patch'
+        '000-CMakeLists.patch'
+        '001-rc.patch'
+        '002-helloworld-base14-example.patch'
+        '003-EncryptTest.patch')
+md5sums=(SKIP
+         SKIP
+         9e6f3e839a497b09043f385489662e91
+         1ca1f454dce75c5be13bb51c7b5de11c
+         SKIP
+         SKIP
+         SKIP
+         SKIP)
+
+pkgver() {
+  cd "${_realname}"
+  local ver="$(svnversion)"
+  printf "r%s" "${ver//[[:alpha:]]}"
+}
+
+prepare_init ()
+{
+  if [[ ! "x${has_pkg_helper}" == "true" ]]; then
+    . ${startdir}/../common/pkg-helper.sh
+  fi
+  local_paths 1
+}
+
+prepare ()
+{
+  msg_b '-->' "WANT_STATIC=${WANT_STATIC}"
+  prepare_init 1
+  prepare_dirs
+
+  mv ${srcdir}/${_realname} ${workdir}
+  pushd ${workdir}
+    # cd ${srcdir}/${_realname}
+    patch -p1 -i $srcdir/000-cmake-cppunit.patch
+    patch -p1 -i $srcdir/000-CMakeLists.patch
+    patch -p1 -i $srcdir/000-PdfPainter.cpp.patch
+    patch -p1 -i $srcdir/000-PdfPainter.h.patch
+    patch -p1 -i $srcdir/001-rc.patch
+    patch -p1 -i $srcdir/002-helloworld-base14-example.patch
+    patch -p1 -i $srcdir/003-EncryptTest.patch
+  popd
+}
+
+build() {
+  prepare_init 1
+  # readme; sleep 5
+  # [[ -d "${builddir}" ]] && rm -rdf "${builddir}"
+  mkdir -p "${builddir}"
+  pushd ${builddir} > /dev/null
+    $MINGW_PREFIX/bin/cmake -G "MSYS Makefiles" \
+      ${workdir} \
+        -Wno-dev \
+        -DPODOFO_BUILD_STATIC=${WANT_STATIC} \
+        -DWANT_FONTCONFIG=TRUE \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INCLUDE_PATH=$MINGW_PREFIX/include \
+        -DCMAKE_LIBRARY_PATH=$MINGW_PREFIX/lib \
+        -DFREETYPE_INCLUDE_DIR=$MINGW_PREFIX/include/freetype2 \
+        -DCMAKE_INSTALL_PREFIX=${builddir}
+    # exit
+    make install
+  popd > /dev/null
+}
+
+package() {
+  prepare_init 1
+
+  # remove existing package directory
+  if [[ -d ${pkgdest} ]]; then rm -drf ${pkgdest}; fi
+  # (re) Create package directory.
+  mkdir -p ${pkgdest}
+  
+  # Start copying files.
+  print_msg1 "copying files..."
+  cp -r ${builddir}/bin ${pkgdest}/bin
+  cp -r ${builddir}/include ${pkgdest}/include
+  cp -r ${builddir}/lib ${pkgdest}/lib
+  cp -r ${builddir}/share ${pkgdest}/share
+}
+
+readme()
+{
+  CAT<<moo
+
+TODO: MISSING CONTENT
+=====================
+
+Note that several things are missing from this package distribution.
+While all binaries are produced by this package and archived in the
+\`pkg.tar.xz\` files, we have not fulfilled all conent as of yet into
+the package.
+
+- docs are not generated (using doxygen) or packaged.
+
+readme.html and related demo files for `pofodoimpose.exe`.
+
+Note that there are several other test applications which
+may be missing similar files. A list of missing files follows.
+
+- src/tools/pofodoimpose/plans/lua/*
+- src/tools/pofodoimpose/
+  - readme.html
+  - sample.pdf
+  - sample.plan
+
+moo
+}

@@ -1,0 +1,11 @@
+--- podofo-0.9.3/test/unit/EncryptTest.h	2012-12-12 16:55:46.000000000 -0600
++++ podofo-0.9.3/test/unit/EncryptTest.h.new	2014-12-13 15:39:07.548742900 -0600
+@@ -83,7 +83,7 @@
+ 
+  private:
+   char* m_pEncBuffer;
+-  long  m_lLen;
++  PoDoFo::pdf_long  m_lLen; // (was long) in order to pass x86_64-w64-mingw32
+   int   m_protection;
+   
+ };

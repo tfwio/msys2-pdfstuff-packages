@@ -1,0 +1,4 @@
+pushd src &> /dev/null
+diff -u podofo-0.9.3/test/unit/EncryptTest.h podofo-0.9.3/test/unit/EncryptTest.h.new > ../003-EncryptTest.patch
+md5sum ../003-EncryptTest.patch
+popd &> /dev/null

@@ -1,0 +1,9 @@
+--- mupdf-qt-source/examples/mupdf-qt/simpleviewer/CMakeLists.txt	2014-09-22 02:44:08.000000000 -0500
++++ mupdf-qt-source/examples/mupdf-qt/simpleviewer/CMakeLists.txt.new	2014-12-15 04:37:47.752573500 -0600
+@@ -9,5 +9,5 @@
+ link_directories (${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+ 
+ add_executable (${PROJECT_NAME} WIN32 main.cpp mainwindow.cpp)
+-target_link_libraries (${PROJECT_NAME} mupdf-qt)
++target_link_libraries (${PROJECT_NAME} mupdf-qt png16)
+ qt5_use_modules (${PROJECT_NAME} Widgets)

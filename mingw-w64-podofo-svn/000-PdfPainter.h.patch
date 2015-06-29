@@ -1,0 +1,33 @@
+--- podofo/src/doc/PdfPainter.h	2014-12-28 06:18:56.898434700 -0600
++++ podofo/src/doc/PdfPainter.h.new	2014-12-28 06:18:56.940437100 -0600
+@@ -718,6 +718,30 @@ class PODOFO_DOC_API PdfPainter {
+      */
+     void SetTransformationMatrix( double a, double b, double c, double d, double e, double f );
+ 
++    /** Set the text matrix for the current coordinate system
++     *  See the operator 'Tm' in PDF.
++     *
++     *  The six parameters are a standard `3x3` transformation matrix
++     *  where the `3` left parameters are `0 0 1`.
++     *
++     *  The operands shall all be numbers, and the initial value for `T` `m` and `T` `lm`
++     *  shall be the identity matrix, `[ 1 0 0 1 0 0 ]`. Although the operands
++     *  specify a matrix, they shall be passed to Tm as six separate numbers, not
++     *  as an array.
++     *
++     *  The matrix specified by the operands shall not be concatenated onto the
++     *  current text matrix, but shall replace it.
++     *
++     *  \param a scale in x direction
++     *  \param b rotation
++     *  \param c rotation
++     *  \param d scale in y direction
++     *  \param e translate in x direction
++     *  \param f translate in y direction
++     * 
++     */
++    void SetTextMatrix( double a, double b, double c, double d, double e, double f );
++
+     /** Sets a specific PdfExtGState as being active
+      *	\param inGState the specific ExtGState to set
+      */

@@ -1,0 +1,25 @@
+
+# cmake -G"MSYS Makefiles" -Wno-dev \
+#   -DCMAKE_INSTALL_PREFIX=$
+#   -DCMAKE_BUILD_TYPE=Release \
+#   -DCMAKE_INCLUDE_PATH=$MINGW_PREFIX/include \
+#   -DCMAKE_LIBRARY_PATH=$MINGW_PREFIX/lib \
+#   $pkg_source
+# echo - create directory
+
+
+
+# echo - COMMAND: \
+#   cmake -G"MSYS Makefiles" -Wno-dev \
+#   -DCMAKE_INSTALL_PREFIX=$
+#   -DPODOFO_BUILD_SHARED=TRUE \
+#   -DWANT_FONTCONFIG=TRUE \
+#   -DCMAKE_BUILD_TYPE=Release \
+#   -DCMAKE_INCLUDE_PATH=$MINGW_PREFIX/include \
+#   -DCMAKE_LIBRARY_PATH=$MINGW_PREFIX/lib \
+#   -DPODOFO_BUILD_LIB_ONLY=True \
+#   -DFREETYPE_INCLUDE_DIR=$MINGW_PREFIX/include/freetype2 \
+#   $pkg_source
+# echo - create directory
+
+# CMAKE_INSTALL_PREFIX

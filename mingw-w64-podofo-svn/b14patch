@@ -1,0 +1,3 @@
+pushd src &> /dev/null
+diff -ua podofo-0.9.3/examples/helloworld-base14/helloworld-base14.cpp podofo-0.9.3/examples/helloworld-base14/helloworld-base14.cpp.new > 002-helloworld-base14-example.patch
+popd &> /dev/null

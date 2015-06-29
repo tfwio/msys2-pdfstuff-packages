@@ -1,0 +1,14 @@
+--- podofo-0.9.3/src/CMakeLists.txt	2014-12-13 01:29:03.567113800 -0600
++++ podofo-0.9.3/src/CMakeLists.new.txt	2014-12-13 01:29:21.384132900 -0600
+@@ -107,11 +107,6 @@
+   doc/PdfXObject.cpp
+   )
+ 
+-IF(WIN32)
+-    # If we build for windows systems, we also include the resource file
+-    SET(PODOFO_DOC_SOURCES ${PODOFO_DOC_SOURCES} doc/podofo-doc.rc)
+-ENDIF(WIN32)
+-
+ SET(PODOFO_HEADERS
+   podofo-base.h
+   podofo.h)
