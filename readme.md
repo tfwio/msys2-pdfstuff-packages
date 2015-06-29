@@ -92,7 +92,7 @@ GETTING STARTED
     -   `makepkg-mingw64`
 -   Load up **msys shell** (command-prompt)
 -   Using Pacman, install all those dependencies that you'll need.
-    -   I would start with the main Qt5 package, as this installs just about all the dependencies you'll need---unless you're merely interested in building only podofo and mupdf (without qt-mupdf).
+    -   I would start with the main Qt5 package, as this installs just about all the dependencies you'll need---unless you're merely interested in building only podofo and mupdf (without mupdf-qt).
     -   Dependencies I can think off the top of my mind: `git, svn, qt5, patch`.
     -   There will be much more specific instructions and dependencies listed here in the future.
 
