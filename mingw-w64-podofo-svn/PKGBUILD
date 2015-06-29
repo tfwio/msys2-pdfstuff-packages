@@ -10,8 +10,8 @@ pkgrel=1
 
 # the name 'pkgver' is conflicting with a function which follows.
 # ----------------------------------------------
-pkgver=r1671
-_revision=r1671
+pkgver=r1673
+_revision=r1673
 # ----------------------------------------------
 
 # Compile shared library by default.
