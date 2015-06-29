@@ -41,7 +41,7 @@ BUILD SCRIPTS ARE FOR
 NOTE
 -----------------------
 
-- ALL THESE PACKAGES HAVE BEEN TESTED AND ARE WORKING.  If you run into an issue,
+- ALL THESE PACKAGES HAVE BEEN TESTED AND ARE WORKING.  I have yet to test from a new, bare msys2 installation (hence the documentation here is lacking).  For now, if you run into an issue,
     1. figure out what dependency package is missing and install it + try again.
     2. these scripts are only known to be working for **i686** (32-bit) binary target hosts---perhaps you are targeting `x86_64`?
 - This project does not release packages or binaries---just these few build scripts.
