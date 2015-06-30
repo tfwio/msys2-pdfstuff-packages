@@ -1,7 +1,7 @@
 MSYS2 repository sandbox for PDF 'stuff'
 ==============
 
-Package (study) scripts for MinGW-w64 targets to build under MSYS2.
+Package (study) scripts for MinGW-w64 targets to build under MSYS2, targeting i686 host (32-bit binaries).
 
     20150629 : INITIAL SCRIPT DUMP
 
