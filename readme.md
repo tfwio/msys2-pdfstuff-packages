@@ -100,7 +100,7 @@ GETTING STARTED
 TO BUILD THE PACKAGES
 ---------------------
 
-To build a package for msys2, you need to navigate to a build-directory (a directory containing a `PKGBUILD` script), and run `makepkg-mingw32`.
+To build a package for msys2, you need to navigate to a build-directory (a directory containing a `PKGBUILD` script), and run `makepkg-mingw32`—see the 'getting started' section up there if you hadn't yet copied the `makepkg-mingw32` into your `usr/bin` yet.
 
 The build script (makepkg-...) should inform you if you are missing any particular dependencies.  If all fails, read into the project's (home) documentation or makefiles to see what dependencies have not yet been included.
 
