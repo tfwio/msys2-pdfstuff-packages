@@ -50,7 +50,7 @@ NOTE
     - PDF-related scripts were recently 'refurbished' and migrated to a separate workspace, here.
     - In this (source-dump revision) repository, you will find several artifacts which have not yet been consolidated out, particularly in the scripts contained in the `./common` directory.
 - **The build process here is personalized slightly**--- I've added two scripts in my `/usr/bin/` copied from `makepkg-mingw` named `makepkg-mingw32` and `makepkg-mingw64` where each of the scripts builds binaries for either (only) targeting 32-bit binaries (which I do often) or 64-bit (not so often).  Using these scripts rather then then original `makepkg-mingw` can be handy when making `PKGBUILD` scripts and targeting only x86 (as an example).
--   The particular build here of MuPDF links MuJS (as opposed to linking NodeJS for javascript support).
+-   The particular build here of MuPDF links MuJS (as opposed to linking v8 for javascript support).
 
 HOWTO
 =============
