@@ -1,10 +1,7 @@
-> **UPDATE: 20171019**
+> **NOTE: 20171019**
 > 
-> This hadn't been looked at in a while...  
-> **PoDoFo** is now provided by msys2's available packages via pacman.
-> 
-> 20171019: update/note
-> 
+> - This hadn't been looked at in a while...  
+> - **PoDoFo** is now provided by msys2's available packages via pacman.
 > - If scripts don't load, you may have to perform a `cd [project-path] ; dos2unix pkgbuild` (or from the root `dos2unix ./*/PKGBUILD`) on the respective build/install script.
 > - updated podofo (r1673/v1.9.4-ish) pkgbuild script since it was no longer making use of the specific svn-revision and was trying to compile the latest (which breaks down under this build script).
 > - MuPDF & MuJS still compiles but is v1.6 vs the v1.11 availible ATM.
