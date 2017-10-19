@@ -73,7 +73,7 @@ depends=("${MINGW_PACKAGE_PREFIX}-libtiff"
          "${MINGW_PACKAGE_PREFIX}-cppunit")
 
 options=(!strip staticlibs libtool)
-source=("${_realname}"::"svn+http://svn.code.sf.net/p/podofo/code/podofo/trunk/"
+source=("${_realname}"::"svn+http://svn.code.sf.net/p/podofo/code/podofo/trunk/#revision=1673"
         '000-cmake-cppunit.patch'
         '000-PdfPainter.cpp.patch'
         '000-PdfPainter.h.patch'
@@ -83,18 +83,19 @@ source=("${_realname}"::"svn+http://svn.code.sf.net/p/podofo/code/podofo/trunk/"
         '003-EncryptTest.patch')
 md5sums=(SKIP
          SKIP
-         9e6f3e839a497b09043f385489662e91
-         1ca1f454dce75c5be13bb51c7b5de11c
+         SKIP
+         SKIP
          SKIP
          SKIP
          SKIP
          SKIP)
 
-pkgver() {
-  cd "${_realname}"
-  local ver="$(svnversion)"
-  printf "r%s" "${ver//[[:alpha:]]}"
-}
+#pkgver() {
+#  cd "${_realname}"
+#  local ver="$(svnversion)"
+#  msg_b  '-->' `"r%s" "${ver//[[:alpha:]]}"`
+#  printf "r%s" "${ver//[[:alpha:]]}"
+#}
 
 prepare_init ()
 {
