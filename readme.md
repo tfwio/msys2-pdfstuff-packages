@@ -1,3 +1,16 @@
+> **UPDATE: 20171019**
+> 
+> This hadn't been looked at in a while...  
+> **PoDoFo** is now provided by msys2's available packages via pacman.
+> 
+> 20171019: update/note
+> 
+> - If scripts don't load, you may have to perform a `cd [project-path] ; dos2unix pkgbuild` (or from the root `dos2unix ./*/PKGBUILD`) on the respective build/install script.
+> - updated podofo (r1673/v1.9.4-ish) pkgbuild script since it was no longer making use of the specific svn-revision and was trying to compile the latest (which breaks down under this build script).
+> - MuPDF & MuJS still compiles but is v1.6 vs the v1.11 availible ATM.
+> - MuPDF-Qt PKGBUILD hasn't been checked since seeding this repo.
+
+
 MSYS2 repository sandbox for PDF 'stuff'
 ==============
 
@@ -80,7 +93,7 @@ These are some of the package dependencies worth noting.
 * patch
 * pkg-config
 * qt5
-* svn
+* subversion
 * clib
 
 GETTING STARTED
@@ -109,7 +122,7 @@ For mupdf-qt, you need to build in proper sequence: (1) mujs, (1.1) install-mujs
 -   load up **msys-mingw32 shell** (command-prompt)
 -   Navigate to the project's directory you intend to build: EG: `cd ~/msys2-pdfstuff-packages/[project-name]` (if you git-cloned into your home directory)
 -   execute: `makepkg-mingw32` or if you are attempting to rebuild, `makepkg-mingw32 --force`.  **If there was an error reported or dependency missing**---should be fairly obvious.
-    -   Install any missing packages
+    -   Install any missing packages `pacman -S [package-name]`
     -   try again
 
 TO INSTALL A PACKAGE
