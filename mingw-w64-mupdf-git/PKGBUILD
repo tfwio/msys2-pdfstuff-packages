@@ -1,5 +1,5 @@
 # Maintainer: Thomas Wroble <tfwroble@gmail.com>
-_realname=mupdf-git
+_realname=mupdf-git ; MY_JBG='https://tfw.io/Mu/jbig2dec' ; MY_SRC='https://tfw.io/Mu/mupdf' ; jbig=jbig2dec
 pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
 pkgver=r14.d4f7789
 pkgrel=1
@@ -8,10 +8,6 @@ arch=('any')
 url='http://mupdf.com'
 license=('GPL3')
 
-MY_JBG='https://tfw.io/Mu/jbig2dec'
-MY_SRC='https://tfw.io/Mu/mupdf'
-jbig=jbig2dec
-# "000-fitz-load-jpx_c.patch" "001-Makethird.patch"
 source=("${_realname}"::"git+${MY_SRC}#commit=b7749e563f93160de82c97fe34fb3fb0d3396304"
         "${jbig}"::"git+${MY_JBG}#commit=9d2c4f3bdb0bd003deae788e7187c0f86e624544"
         "000-Makethird.patch"
@@ -39,102 +35,20 @@ depends=("$MINGW_PACKAGE_PREFIX-curl"
          "$MINGW_PACKAGE_PREFIX-zlib")
 makedepends=("${MINGW_PACKAGE_PREFIX}-gcc")
 
-local_paths ()
-{
-  # . ${startdir}/helper.sh
-  print_msg1 "setting local paths"
-  print_msg2 "CARCH: $CARCH"
-  print_msg2 "CHOST: $CHOST"
-  print_msg2 "MINGW_PREFIX: $MINGW_PREFIX"
-  print_msg2 "MINGW_CHOST: $MINGW_CHOST"
-  
-  pushd $MINGW_PREFIX/bin > /dev/null; ifix=`pwd -W`; popd > /dev/null
-  pushd $MINGW_PREFIX > /dev/null; WMD=`pwd -W`; popd
-  workdir=${startdir}/src/work-${CARCH}
-  pkgdir=${startdir}/pkg/${pkgname}
-  builddir=${startdir}/src/build-${CARCH}
-  pkgdest=${pkgdir}${MINGW_PREFIX}
-  prefix=${builddir}
-
-  if [[ "x$1" == "x1" ]]; then
-    print_msg2 "builddir   : ${builddir}"
-    print_msg2 "ifix       : ${ifix}"
-    print_msg2 "pkgdest    : ${pkgdest}"
-    print_msg2 "pkgdir     : ${pkgdir}"
-    print_msg2 "prefix     : ${prefix}"
-    print_msg2 "srcdir     : ${srcdir}"
-    print_msg2 "startdir   : ${startdir}"
-    print_msg2 "workdir    : ${workdir}"
-    print_msg2 "WMD        : ${WMD}"
-  fi
-  pathsloaded=true
-}
-
-prepare_dirs ()
-{
-  if [[ -d ${builddir} ]]; then
-    print_msg1 'remove build directory' #green
-    rm -drf ${builddir}
-  else
-    print_warning 'no build directory to remove' # yellow
-  fi
-  if [[ -d ${workdir} ]]; then
-    print_msg1 'remove work directory' #green
-    rm -drf ${workdir}
-  else
-    print_warning 'no work directory to remove' # yellow
-  fi
-  if [[ -d ${pkgdest} ]]; then
-    print_msg1 'remove pkgdest directory' #green
-    rm -drf ${pkgdest}
-  else
-    print_warning 'no work directory to remove' # yellow
-  fi
-}
-
-function rm_if () {
-  print_msg1 "removing ${*}"
-  if [[ -d "${1}" ]]; then rm -rf ${*} ; fi
-}
-
 prepare ()
 {
-
-  local_paths 1
-  prepare_dirs
-  # workdir exists # mkdir -p ${workdir}
-
-  # this is pointing to a particular file.
-  print_msg2 'moving sources to workdir'
-  # mv ${srcdir}/${_realname}-${pkgver}-source ${workdir}
+  local_paths 1 ; prepare_dirs ; print_msg2 'moving sources to workdir'
   mv "${srcdir}/${_realname}" "${workdir}"
-
   pushd ${workdir} > /dev/null # for patching
-    
-    print_msg1 "000-Makethird"
-    patch -p1 -i ${srcdir}/000-Makethird.patch
-
-    print_msg1 "001-gitmodules"
-    patch -p1 -i ${srcdir}/001-gitmodules.patch
-
-    print_msg1 "002-scripts--cmapdump"
-    patch -p1 -i ${srcdir}/002-scripts--cmapdump.patch
-
-    # am not clear on why this is necessary --- maybe there was a typo in the build portion
-    # of this script ATM --- either way, this is working.
-    print_msg1 "003-load-jpx"
-    patch -p1 -i ${srcdir}/003-load-jpx.patch
-
-    print_msg1 "Clean out the old modules."
-    rm -rf thirdparty/{curl,lcms2,libjpeg,mujs,freetype,zlib,openjpeg,libcms2,harfbuzz,freeglut}
-    
-    print_msg1 "move jbig"
-    mv "${srcdir}/${jbig}" "${workdir}/thirdparty"
-    # no `git submodule init` so
-    # dont need `rm thirdparty/{curl,mujs,freetype,zlib,jpeg,openjpeg}`
-    # jbig2dec
+    print_msg1 "000-Makethird"              ; patch -p1 -i ${srcdir}/000-Makethird.patch
+    print_msg1 "001-gitmodules"             ; patch -p1 -i ${srcdir}/001-gitmodules.patch
+    print_msg1 "002-scripts--cmapdump"      ; patch -p1 -i ${srcdir}/002-scripts--cmapdump.patch
+    # may not be necessary but works.
+    print_msg1 "003-load-jpx"               ; patch -p1 -i ${srcdir}/003-load-jpx.patch
+    print_msg1 "Clean out the old modules." ; rm -rf thirdparty/{curl,lcms2,libjpeg,mujs,freetype,zlib,openjpeg,libcms2,harfbuzz,freeglut}
+    print_msg1 "move jbig"                  ; mv "${srcdir}/${jbig}" "${workdir}/thirdparty"
+    # no `git submodule init` so # dont need `rm thirdparty/{curl,mujs,freetype,zlib,jpeg,openjpeg}` # jbig2dec
   popd
-
 }
 
 build()
@@ -142,9 +56,7 @@ build()
   if [[ ! "x${pathsloaded}" == "true" ]]; then local_paths 1; fi
   # mupdf is known only to compile a static library.
   pushd "${workdir}" > /dev/null
-    # --------------------------------------
-    # set environment flags for compilation
-    # --------------------------------------
+    # is export necessary? prob not
     export CC LD AR CXX LIBTOOL XCFLAGS
     CC=${ifix}/gcc LD=${ifix}/ld AR=${ifix}/ar CXX=${ifix}/g++ LIBTOOL=${ifix}/libtool \
     XLIBS="-L${MINGW_PREFIX}/lib  `pkg-config --libs --static zlib libopenjp2 freetype2` -ljpeg" \
@@ -185,12 +97,70 @@ package() {
 
 pkgver ()
 {
-  #cd "$pkgname"
-  #git describe --long --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
   printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
 }
 
+###################################
+## UTIL
+###################################
+
+prepare_dirs ()
+{
+  if [[ -d ${builddir} ]]; then
+    print_msg1 'remove build directory' #green
+    rm -drf ${builddir}
+  else
+    print_warning 'no build directory to remove' # yellow
+  fi
+  if [[ -d ${workdir} ]]; then
+    print_msg1 'remove work directory' #green
+    rm -drf ${workdir}
+  else
+    print_warning 'no work directory to remove' # yellow
+  fi
+  if [[ -d ${pkgdest} ]]; then
+    print_msg1 'remove pkgdest directory' #green
+    rm -drf ${pkgdest}
+  else
+    print_warning 'no work directory to remove' # yellow
+  fi
+}
+
+local_paths ()
+{
+  # . ${startdir}/helper.sh
+  print_msg1 "setting local paths"
+  print_msg2 "CARCH: $CARCH"
+  print_msg2 "CHOST: $CHOST"
+  print_msg2 "MINGW_PREFIX: $MINGW_PREFIX"
+  print_msg2 "MINGW_CHOST: $MINGW_CHOST"
+  
+  pushd $MINGW_PREFIX/bin > /dev/null; ifix=`pwd -W`; popd > /dev/null
+  pushd $MINGW_PREFIX > /dev/null; WMD=`pwd -W`; popd
+  workdir=${startdir}/src/work-${CARCH}
+  pkgdir=${startdir}/pkg/${pkgname}
+  builddir=${startdir}/src/build-${CARCH}
+  pkgdest=${pkgdir}${MINGW_PREFIX}
+  prefix=${builddir}
+
+  if [[ "x$1" == "x1" ]]; then
+    print_msg2 "builddir   : ${builddir}"
+    print_msg2 "ifix       : ${ifix}"
+    print_msg2 "pkgdest    : ${pkgdest}"
+    print_msg2 "pkgdir     : ${pkgdir}"
+    print_msg2 "prefix     : ${prefix}"
+    print_msg2 "srcdir     : ${srcdir}"
+    print_msg2 "startdir   : ${startdir}"
+    print_msg2 "workdir    : ${workdir}"
+    print_msg2 "WMD        : ${WMD}"
+  fi
+  pathsloaded=true
+}
+
+###################################
+# more UTIL
 # this *could* be in makepkg-mingw{32,64}
+###################################
 
 plain() {
   local mesg=$1; shift

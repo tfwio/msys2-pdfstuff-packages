@@ -1,23 +1,8 @@
 # Maintainer: tfwroble <@gmail.com>
-# http://git.ghostscript.com/?p=mujs.git;a=snapshot;h=9bc5fec0804381d59ef8dc62304ed6892fb7c4ca;sf=tgz
-# 9bc5fec0804381d59ef8dc62304ed6892fb7c4ca
 # - owner       Artifex Software, Inc.
 # - last change Thu, 11 Dec 2014 09:45:04 -0600 (16:45 +0100)
 # - URL         git://git.ghostscript.com/mujs.git
-  #cd       "$srcdir/build-$MINGW_CHOST"
-  #cd "$srcdir/${_realname}-${pkgver}-source" # for patching
-  ###o ---------------------------------
-  ###o srcdir=$srcdir
-  ###o startdir=$startdir
-  ###o PKGCONFIG=$PKGCONFIG
-  ###o CARCH=$CARCH
-  ###o MINGW_CHOST=$MINGW_CHOST
-  ###o MINGW_PREFIX=$MINGW_PREFIX
-  ###o XCFLAGS=$XCFLAGS
-  ###o LDFLAGS=-static
-  ###o ---------------------------------
-_realname=mujs
-
+_realname=mujs ; pkg_nam=${_realname}-git ; pkg_url="git+https://tfw.io/Mu/mujs"
 pkgver=git
 pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
 pkgrel=0
@@ -25,55 +10,10 @@ pkgdesc='MuJS: a Javascript interpreter'
 arch=('any')
 url='http://mupdf.com'
 license=('AGPL')
-
-#kg_sha=aba272ac959329476ce73bc7d69d14ad7779c754
-#kg_url="http://git.ghostscript.com/?p=mujs.git;a=snapshot;h=aba272ac959329476ce73bc7d69d14ad7779c754;sf=tgz"
-pkg_url="git+https://tfw.io/Mu/mujs"
-#kg_nam=mujs-${pkg_sha::7}
-pkg_nam=mujs-git
-
-#rl=http://git.ghostscript.com/?p=mujs.git;a=snapshot;h=9bc5fec0804381d59ef8dc62304ed6892fb7c4ca;sf=tgz
-
-source=("${pkg_nam}::$pkg_url")
-
-#ource=("$pkg_nam.tar.gz::$pkg_url" 000-Makefile.patch)
+source=("${pkg_nam}::${pkg_url}#commit=41625ec2d007c65bb39e89d4b4a49236a16be558")
 md5sums=('SKIP')
 options=(!zipman !strip !docs !libtool staticlibs !emptydirs !zipman !purge !upx !debug)
-
 makedepends=("${MINGW_PACKAGE_PREFIX}-clang")
-
-  # print_msg1    (green)
-  # print_msg2    (blue)
-  # print_warning (yellow)
-  # print_error   (red)
-  # echo $(printenv) > vars.sh
-  # exit 1
-
-
-plain() {
-  local mesg=$1; shift
-  printf "${BOLD}    ${mesg}${ALL_OFF}\n" "$@" >&2
-}
-
-print_warning() {
-  local mesg=$1; shift
-  printf "${YELLOW}=> WARNING:${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
-}
-
-print_msg1() {
-  local mesg=$1; shift
-  printf "${GREEN}==> ${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
-}
-
-print_msg2() {
-  local mesg=$1; shift
-  printf "${BLUE}  ->${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
-}
-
-print_error() {
-  local mesg=$1; shift
-  printf "${RED}==> ERROR:${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
-}
 
 local_paths ()
 {
@@ -106,6 +46,41 @@ local_paths ()
   pathsloaded=true
 }
 
+prepare ()
+{
+  local_paths 1 ; prepare_dirs
+  print_msg2 "move source to \"${workdir}\" directory" ; mv ${pkg_nam} ${workdir} > /dev/null
+  print_msg2 'create build directory'                  ; mkdir -p ${builddir}
+}
+
+build()
+{
+  if [[ ! "x${pathsloaded}" == "true" ]]; then local_paths 1; fi # echo $(printenv) > vars.sh
+  pushd ${workdir} > /dev/null
+    export CC LD AR CXX LIBTOOL XCFLAGS
+    CC=$ifix/gcc LD=$ifix/ld AR=$ifix/ar CXX=$ifix/g++ LIBTOOL=$ifix/libtool prefix=${prefix} \
+    make install build=release
+  popd > /dev/null
+  # again? # mingw32-make || mingw32-make || mingw32-make
+}
+
+package() {
+  if [[ ! "x${pathsloaded}" == "true" ]]; then local_paths 1; fi
+  if [[ -d ${pkgdest} ]]; then rm -drf ${pkgdest}; fi
+  mkdir -p ${pkgdest}
+  print_msg1 "copying files..."
+  cp -r ${builddir}/* ${pkgdest}
+}
+
+pkgver ()
+{
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+###########################################################
+## UTIL
+###########################################################
+
 prepare_dirs ()
 {
   if [[ -d ${builddir} ]]; then
@@ -128,46 +103,31 @@ prepare_dirs ()
   fi
 }
 
-prepare ()
-{
-  local_paths 1
-  prepare_dirs
+###########################################################
+## MISC STUFF
+###########################################################
 
-  print_msg2 "move source to \"${workdir}\" directory"
-  mv ${pkg_nam} ${workdir} > /dev/null
-  
-  print_msg2 'create build directory'
-  mkdir -p ${builddir}
-
-  #print_msg2 'enter work directory'
-  #pushd ${workdir} > /dev/null
-  #patch -p1 -i ${srcdir}/000-Makefile.patch
-  #popd
+plain() {
+  local mesg=$1; shift
+  printf "${BOLD}    ${mesg}${ALL_OFF}\n" "$@" >&2
 }
 
-build()
-{
-  if [[ ! "x${pathsloaded}" == "true" ]]; then local_paths 1; fi # echo $(printenv) > vars.sh
-  pushd ${workdir} > /dev/null
-    export CC=$ifix/gcc
-    export LD=$ifix/ld
-    export AR=$ifix/ar
-    export CXX=$ifix/g++
-    export LIBTOOL=$ifix/libtool
-    export CC LD AR CXX LIBTOOL XCFLAGS
-    prefix=${prefix} \
-    make install build=release
-  popd > /dev/null
-
-
-  # mingw32-make || mingw32-make || mingw32-make
+print_warning() {
+  local mesg=$1; shift
+  printf "${YELLOW}=> WARNING:${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
 }
 
-package() {
-  if [[ ! "x${pathsloaded}" == "true" ]]; then local_paths 1; fi
-  if [[ -d ${pkgdest} ]]; then rm -drf ${pkgdest}; fi
-  mkdir -p ${pkgdest}
-  print_msg1 "copying files..."
-  cp -r ${builddir}/* ${pkgdest}
+print_msg1() {
+  local mesg=$1; shift
+  printf "${GREEN}==> ${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
 }
 
+print_msg2() {
+  local mesg=$1; shift
+  printf "${BLUE}  ->${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
+}
+
+print_error() {
+  local mesg=$1; shift
+  printf "${RED}==> ERROR:${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
+}
