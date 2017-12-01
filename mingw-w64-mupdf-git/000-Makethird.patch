@@ -1,0 +1,41 @@
+diff --git "a/C:\\Users\\xo\\AppData\\Local\\Temp\\TortoiseGit\\Makethird-b7749e5.000" "b/C:\\Users\\xo\\Go\\mupdf\\Makethird"
+index fbc8b7f..9fccd88 100644
+--- "a/Makethird-b7749e5.000"
++++ "b/Makethird"
+@@ -13,7 +13,6 @@ JPEGXR_DIR := thirdparty/jpegxr
+ LCMS2_DIR := thirdparty/lcms2
+ LIBJPEG_DIR := thirdparty/libjpeg
+ LURATECH_DIR := thirdparty/luratech
+-MUJS_DIR := thirdparty/mujs
+ OPENJPEG_DIR := thirdparty/openjpeg/src/lib/openjp2
+ ZLIB_DIR := thirdparty/zlib
+ 
+@@ -22,27 +21,7 @@ GLUT_DIR := thirdparty/freeglut
+ 
+ # --- MuJS ---
+ 
+-ifneq "$(wildcard $(MUJS_DIR)/README)" ""
+-
+-MUJS_OUT := $(OUT)/thirdparty/mujs
+-MUJS_SRC := one.c
+-
+-MUJS_OBJ := $(addprefix $(MUJS_OUT)/, $(MUJS_SRC:%.c=%.o))
+-
+-$(MUJS_OUT)/one.o: $(wildcard $(MUJS_DIR)/js*.c $(MUJS_DIR)/utf*.c $(MUJS_DIR)/regex.c $(MUJS_DIR)/*.h)
+-
+-$(MUJS_OUT):
+-	$(MKDIR_CMD)
+-$(MUJS_OUT)/%.o: $(MUJS_DIR)/%.c | $(MUJS_OUT)
+-	$(CC_CMD)
+-
+-MUJS_CFLAGS := -I$(MUJS_DIR)
+-
+-else
+-
+-MUJS_CFLAGS := -DFZ_ENABLE_JS=0
+-
+-endif
++HAVE_MUJS := yes
+ 
+ # --- FreeType 2 ---
+ 

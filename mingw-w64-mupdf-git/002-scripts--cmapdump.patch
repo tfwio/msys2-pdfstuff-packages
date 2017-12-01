@@ -1,0 +1,13 @@
+diff --git a/scripts/cmapdump.c b/scripts/cmapdump.c
+index a59532e8..4aa232c1 100644
+--- a/scripts/cmapdump.c
++++ b/scripts/cmapdump.c
+@@ -16,6 +16,8 @@
+ #include "mupdf/fitz.h"
+ #include "mupdf/pdf.h"
+ 
++void * fz_fopen_utf8(const char *name, const char *mode);
++
+ #include "../source/fitz/context.c"
+ #include "../source/fitz/error.c"
+ #include "../source/fitz/memory.c"
