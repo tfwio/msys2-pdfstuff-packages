@@ -1,20 +1,18 @@
 # Maintainer: Thomas Wroble <tfwroble@gmail.com>
 _realname=mupdf-git ; MY_JBG='https://tfw.io/Mu/jbig2dec' ; MY_SRC='https://tfw.io/Mu/mupdf' ; jbig=jbig2dec
 pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
-pkgver=r14.d4f7789
+pkgver=r6576.b7749e56
 pkgrel=1
 pkgdesc='Lightweight PDF and XPS viewer'
 arch=('any')
 url='http://mupdf.com'
 license=('GPL3')
-
 source=("${_realname}"::"git+${MY_SRC}#commit=b7749e563f93160de82c97fe34fb3fb0d3396304"
         "${jbig}"::"git+${MY_JBG}#commit=9d2c4f3bdb0bd003deae788e7187c0f86e624544"
         "000-Makethird.patch"
         "001-gitmodules.patch"
         "002-scripts--cmapdump.patch"
         "003-load-jpx.patch")
-
 sha1sums=('SKIP'
           'SKIP'
           'eb784b5082172d53d1cf7f9d89f63c5ece2decca'
@@ -82,22 +80,21 @@ package() {
   print_msg2 "pkgdir=${pkgdir}"
   if [[ -d ${pkgdest} ]]; then rm -drf ${pkgdest}; fi
   mkdir -p ${pkgdest}
-
   print_msg1 "copying files..."
   print_msg1 cmd="cp -r ${builddir}/* ${pkgdest}"
   cp -r ${builddir}/* ${pkgdest}
-  
   # MINGW_PREFIX=mingw32 or mingw64
   dest=${pkgdir}/${MINGW_PREFIX}
   if [ ! -d ${dest} ]; then mkdir -p ${dest}; fi
-
   cp ${prefix}/lib/libmupdf.a "${dest}/lib/"
   cp ${prefix}/lib/libmupdfthird.a "${dest}/lib/"
 }
 
 pkgver ()
 {
-  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+  pushd ${startdir}/${_realname} > /dev/null
+    printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+  popd > /dev/null
 }
 
 ###################################
