@@ -1,24 +1,25 @@
 # Maintainer: Thomas Wroble <tfwroble@gmail.com>
+# Packager: tfw
 _realname=mupdf-git ; MY_JBG='https://tfw.io/Mu/jbig2dec' ; MY_SRC='https://tfw.io/Mu/mupdf' ; jbig=jbig2dec
 pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
-pkgver=r6576.b7749e56
-pkgrel=1
+pkgver=1.11
+pkgrel=0
 pkgdesc='Lightweight PDF and XPS viewer'
 arch=('any')
 url='http://mupdf.com'
 license=('GPL3')
-source=("${_realname}"::"git+${MY_SRC}#commit=b7749e563f93160de82c97fe34fb3fb0d3396304"
+source=("${_realname}"::"git+${MY_SRC}#tag=1.11"
+        #https://<host>/<user>/jbig2dec/commit/9d2c4f3bdb0bd003deae788e7187c0f86e624544
         "${jbig}"::"git+${MY_JBG}#commit=9d2c4f3bdb0bd003deae788e7187c0f86e624544"
         "000-Makethird.patch"
-        "001-gitmodules.patch"
-        "002-scripts--cmapdump.patch"
-        "003-load-jpx.patch")
+        #"001-gitmodules.patch"
+        #"002-scripts--cmapdump.patch"
+        "003-load-jpx-1.11.patch"
+)
 sha1sums=('SKIP'
           'SKIP'
           'eb784b5082172d53d1cf7f9d89f63c5ece2decca'
-          '25ad060575c937f8fe3ace732861e1be4dd322e4'
-          '2f05e1232c978e551ea733b1e38711ff9b939ec6'
-          '3b5cdb8e35840e2819ea405de9462edf645a2fe2')
+          '3477bd1910c868d8b69fae881c84de654dd97f48')
 # 'staticlibs' 'libtool'
 options=(strip !purge staticlibs)
 depends=("$MINGW_PACKAGE_PREFIX-curl"
@@ -39,14 +40,14 @@ prepare ()
   mv "${srcdir}/${_realname}" "${workdir}"
   pushd ${workdir} > /dev/null # for patching
     print_msg1 "000-Makethird"              ; patch -p1 -i ${srcdir}/000-Makethird.patch
-    print_msg1 "001-gitmodules"             ; patch -p1 -i ${srcdir}/001-gitmodules.patch
-    print_msg1 "002-scripts--cmapdump"      ; patch -p1 -i ${srcdir}/002-scripts--cmapdump.patch
+    # print_msg1 "001-gitmodules"             ; patch -p1 -i ${srcdir}/001-gitmodules.patch
+    # print_msg1 "002-scripts--cmapdump"      ; patch -p1 -i ${srcdir}/002-scripts--cmapdump.patch
     # may not be necessary but works.
-    print_msg1 "003-load-jpx"               ; patch -p1 -i ${srcdir}/003-load-jpx.patch
+    print_msg1 "003-load-jpx-1.11"          ; patch -p1 -i ${srcdir}/003-load-jpx-1.11.patch
     print_msg1 "Clean out the old modules." ; rm -rf thirdparty/{curl,lcms2,libjpeg,mujs,freetype,zlib,openjpeg,libcms2,harfbuzz,freeglut}
     print_msg1 "move jbig"                  ; mv "${srcdir}/${jbig}" "${workdir}/thirdparty"
     # no `git submodule init` so # dont need `rm thirdparty/{curl,mujs,freetype,zlib,jpeg,openjpeg}` # jbig2dec
-  popd
+  popd > /dev/null
 }
 
 build()
@@ -55,7 +56,6 @@ build()
   # mupdf is known only to compile a static library.
   pushd "${workdir}" > /dev/null
     # is export necessary? prob not
-    export CC LD AR CXX LIBTOOL XCFLAGS
     CC=${ifix}/gcc LD=${ifix}/ld AR=${ifix}/ar CXX=${ifix}/g++ LIBTOOL=${ifix}/libtool \
     XLIBS="-L${MINGW_PREFIX}/lib  `pkg-config --libs --static zlib libopenjp2 freetype2` -ljpeg" \
     XCFLAGS="`pkg-config --cflags zlib libopenjp2 freetype2`" \
@@ -68,6 +68,7 @@ build()
     XLIBS="$XLIBS" \
     MUJS_LIBS="$MUJS_LIBS" \
     NOX11="$NOX11"
+    export CC LD AR CXX LIBTOOL XCFLAGS
     # --------------------------------------
     # copy and missing files that may not have been installed.
     ## cp build/release/libjbig2dec.a $prefix/lib
@@ -90,12 +91,12 @@ package() {
   cp ${prefix}/lib/libmupdfthird.a "${dest}/lib/"
 }
 
-pkgver ()
-{
-  pushd ${startdir}/${_realname} > /dev/null
-    printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
-  popd > /dev/null
-}
+# pkgver ()
+# {
+#   pushd ${startdir}/${_realname} > /dev/null
+#     printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+#   popd > /dev/null
+# }
 
 ###################################
 ## UTIL
@@ -133,7 +134,7 @@ local_paths ()
   print_msg2 "MINGW_CHOST: $MINGW_CHOST"
   
   pushd $MINGW_PREFIX/bin > /dev/null; ifix=`pwd -W`; popd > /dev/null
-  pushd $MINGW_PREFIX > /dev/null; WMD=`pwd -W`; popd
+  pushd $MINGW_PREFIX > /dev/null; WMD=`pwd -W`; popd > /dev/null
   workdir=${startdir}/src/work-${CARCH}
   pkgdir=${startdir}/pkg/${pkgname}
   builddir=${startdir}/src/build-${CARCH}

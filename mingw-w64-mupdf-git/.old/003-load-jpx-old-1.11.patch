@@ -1,0 +1,13 @@
+diff --git a/source/fitz/load-jpx.c b/source/fitz/load-jpx.c
+index d01de585..e483b2c1 100644
+--- a/source/fitz/load-jpx.c
++++ b/source/fitz/load-jpx.c
+@@ -451,7 +451,7 @@ fz_load_jpx_info(fz_context *ctx, unsigned char *data, size_t size, int *wp, int
+ #endif
+ #define USE_JPIP
+ 
+-#include <openjpeg.h>
++#include <openjpeg-2.2/openjpeg.h>
+ 
+ struct fz_jpxd_s
+ {

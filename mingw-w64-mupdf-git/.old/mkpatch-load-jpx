@@ -1,0 +1,4 @@
+pushd src/work-i686 > /dev/null
+git diff -p source/fitz/load-jpx.c > ../../${1}.patch
+popd > /dev/null
+

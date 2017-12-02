@@ -3,15 +3,16 @@
 # - last change Thu, 11 Dec 2014 09:45:04 -0600 (16:45 +0100)
 # - URL         git://git.ghostscript.com/mujs.git
 _realname=mujs ; pkg_nam=${_realname}-git ; pkg_url="git+https://tfw.io/Mu/mujs"
-pkgver=git
+pkgver=r535.41625ec
 pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
-pkgrel=0
+pkgrel=1
 pkgdesc='MuJS: a Javascript interpreter'
 arch=('any')
 url='http://mupdf.com'
 license=('AGPL')
-source=("${pkg_nam}::${pkg_url}#commit=41625ec2d007c65bb39e89d4b4a49236a16be558")
-md5sums=('SKIP')
+#ource=("${pkg_nam}::${pkg_url}#commit=41625ec2d007c65bb39e89d4b4a49236a16be558")
+source=("${pkg_nam}::${pkg_url}#commit=872cef584db8fdb766f03e7cc5df8e6ea5c7ebdc")
+sha1sums=('SKIP')
 options=(!zipman !strip !docs !libtool staticlibs !emptydirs !zipman !purge !upx !debug)
 makedepends=("${MINGW_PACKAGE_PREFIX}-clang")
 
@@ -57,6 +58,7 @@ build()
 {
   if [[ ! "x${pathsloaded}" == "true" ]]; then local_paths 1; fi # echo $(printenv) > vars.sh
   pushd ${workdir} > /dev/null
+  
     export CC LD AR CXX LIBTOOL XCFLAGS
     CC=$ifix/gcc LD=$ifix/ld AR=$ifix/ar CXX=$ifix/g++ LIBTOOL=$ifix/libtool prefix=${prefix} \
     make install build=release
@@ -74,7 +76,9 @@ package() {
 
 pkgver ()
 {
+  pushd ${startdir}/mujs-git > /dev/null
   printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+  popd > /dev/null
 }
 
 ###########################################################
