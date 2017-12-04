@@ -1,0 +1,186 @@
+# Maintainer: Thomas Wroble <tfwroble@gmail.com>
+# Packager: tfw
+_realname=mupdf-git ; MY_JBG='https://tfw.io/Mu/jbig2dec' ; MY_SRC='https://tfw.io/Mu/mupdf' ; jbig=jbig2dec
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=1.11
+pkgrel=0
+pkgdesc='Lightweight PDF and XPS viewer'
+arch=('any')
+url='http://mupdf.com'
+license=('GPL3')
+source=("${_realname}"::"git+${MY_SRC}#tag=1.11"
+        #https://<host>/<user>/jbig2dec/commit/9d2c4f3bdb0bd003deae788e7187c0f86e624544
+        "${jbig}"::"git+${MY_JBG}#commit=9d2c4f3bdb0bd003deae788e7187c0f86e624544"
+        "000-Makethird.patch"
+        #"001-gitmodules.patch"
+        #"002-scripts--cmapdump.patch"
+        "003-load-jpx-1.11.patch"
+)
+sha1sums=('SKIP'
+          'SKIP'
+          'eb784b5082172d53d1cf7f9d89f63c5ece2decca'
+          '3477bd1910c868d8b69fae881c84de654dd97f48')
+# 'staticlibs' 'libtool'
+options=(strip !purge staticlibs)
+depends=("$MINGW_PACKAGE_PREFIX-curl"
+         "$MINGW_PACKAGE_PREFIX-freetype"
+         "$MINGW_PACKAGE_PREFIX-harfbuzz"
+         "$MINGW_PACKAGE_PREFIX-jbigkit"
+         "$MINGW_PACKAGE_PREFIX-lcms2"
+         "$MINGW_PACKAGE_PREFIX-libjpeg"
+         "$MINGW_PACKAGE_PREFIX-mujs"
+         "$MINGW_PACKAGE_PREFIX-openssl"
+         "$MINGW_PACKAGE_PREFIX-openjpeg2"
+         "$MINGW_PACKAGE_PREFIX-zlib")
+makedepends=("${MINGW_PACKAGE_PREFIX}-gcc")
+
+prepare ()
+{
+  local_paths 1 ; prepare_dirs ; print_msg2 'moving sources to workdir'
+  mv "${srcdir}/${_realname}" "${workdir}"
+  pushd ${workdir} > /dev/null # for patching
+    print_msg1 "000-Makethird"              ; patch -p1 -i ${srcdir}/000-Makethird.patch
+    # print_msg1 "001-gitmodules"             ; patch -p1 -i ${srcdir}/001-gitmodules.patch
+    # print_msg1 "002-scripts--cmapdump"      ; patch -p1 -i ${srcdir}/002-scripts--cmapdump.patch
+    # may not be necessary but works.
+    print_msg1 "003-load-jpx-1.11"          ; patch -p1 -i ${srcdir}/003-load-jpx-1.11.patch
+    print_msg1 "Clean out the old modules." ; rm -rf thirdparty/{curl,lcms2,libjpeg,mujs,freetype,zlib,openjpeg,libcms2,harfbuzz,freeglut}
+    print_msg1 "move jbig"                  ; mv "${srcdir}/${jbig}" "${workdir}/thirdparty"
+    # no `git submodule init` so # dont need `rm thirdparty/{curl,mujs,freetype,zlib,jpeg,openjpeg}` # jbig2dec
+  popd > /dev/null
+}
+
+build()
+{
+  if [[ ! "x${pathsloaded}" == "true" ]]; then local_paths 1; fi
+  # mupdf is known only to compile a static library.
+  pushd "${workdir}" > /dev/null
+    # is export necessary? prob not
+    CC=${ifix}/gcc LD=${ifix}/ld AR=${ifix}/ar CXX=${ifix}/g++ LIBTOOL=${ifix}/libtool \
+    XLIBS="-L${MINGW_PREFIX}/lib  `pkg-config --libs --static zlib libopenjp2 freetype2` -ljpeg" \
+    XCFLAGS="`pkg-config --cflags zlib libopenjp2 freetype2`" \
+    MUJS_LIBS=-lmujs \
+    NOX11=yes \
+    verbose=yes && \
+    make install build=release verbose="${verbose}" \
+    prefix="${builddir}" \
+    XCFLAGS="$XCFLAGS" \
+    XLIBS="$XLIBS" \
+    MUJS_LIBS="$MUJS_LIBS" \
+    NOX11="$NOX11"
+    export CC LD AR CXX LIBTOOL XCFLAGS
+    # --------------------------------------
+    # copy and missing files that may not have been installed.
+    ## cp build/release/libjbig2dec.a $prefix/lib
+    # --------------------------------------
+  popd > /dev/null
+}
+
+package() {
+  if [[ ! "x${pathsloaded}" == "true" ]]; then local_paths 1; fi
+  print_msg2 "pkgdir=${pkgdir}"
+  if [[ -d ${pkgdest} ]]; then rm -drf ${pkgdest}; fi
+  mkdir -p ${pkgdest}
+  print_msg1 "copying files..."
+  print_msg1 cmd="cp -r ${builddir}/* ${pkgdest}"
+  cp -r ${builddir}/* ${pkgdest}
+  # MINGW_PREFIX=mingw32 or mingw64
+  dest=${pkgdir}/${MINGW_PREFIX}
+  if [ ! -d ${dest} ]; then mkdir -p ${dest}; fi
+  cp ${prefix}/lib/libmupdf.a "${dest}/lib/"
+  cp ${prefix}/lib/libmupdfthird.a "${dest}/lib/"
+}
+
+# pkgver ()
+# {
+#   pushd ${startdir}/${_realname} > /dev/null
+#     printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+#   popd > /dev/null
+# }
+
+###################################
+## UTIL
+###################################
+
+prepare_dirs ()
+{
+  if [[ -d ${builddir} ]]; then
+    print_msg1 'remove build directory' #green
+    rm -drf ${builddir}
+  else
+    print_warning 'no build directory to remove' # yellow
+  fi
+  if [[ -d ${workdir} ]]; then
+    print_msg1 'remove work directory' #green
+    rm -drf ${workdir}
+  else
+    print_warning 'no work directory to remove' # yellow
+  fi
+  if [[ -d ${pkgdest} ]]; then
+    print_msg1 'remove pkgdest directory' #green
+    rm -drf ${pkgdest}
+  else
+    print_warning 'no work directory to remove' # yellow
+  fi
+}
+
+local_paths ()
+{
+  # . ${startdir}/helper.sh
+  print_msg1 "setting local paths"
+  print_msg2 "CARCH: $CARCH"
+  print_msg2 "CHOST: $CHOST"
+  print_msg2 "MINGW_PREFIX: $MINGW_PREFIX"
+  print_msg2 "MINGW_CHOST: $MINGW_CHOST"
+  
+  pushd $MINGW_PREFIX/bin > /dev/null; ifix=`pwd -W`; popd > /dev/null
+  pushd $MINGW_PREFIX > /dev/null; WMD=`pwd -W`; popd > /dev/null
+  workdir=${startdir}/src/work-${CARCH}
+  pkgdir=${startdir}/pkg/${pkgname}
+  builddir=${startdir}/src/build-${CARCH}
+  pkgdest=${pkgdir}${MINGW_PREFIX}
+  prefix=${builddir}
+
+  if [[ "x$1" == "x1" ]]; then
+    print_msg2 "builddir   : ${builddir}"
+    print_msg2 "ifix       : ${ifix}"
+    print_msg2 "pkgdest    : ${pkgdest}"
+    print_msg2 "pkgdir     : ${pkgdir}"
+    print_msg2 "prefix     : ${prefix}"
+    print_msg2 "srcdir     : ${srcdir}"
+    print_msg2 "startdir   : ${startdir}"
+    print_msg2 "workdir    : ${workdir}"
+    print_msg2 "WMD        : ${WMD}"
+  fi
+  pathsloaded=true
+}
+
+###################################
+# more UTIL
+# this *could* be in makepkg-mingw{32,64}
+###################################
+
+plain() {
+  local mesg=$1; shift
+  printf "${BOLD}    ${mesg}${ALL_OFF}\n" "$@" >&2
+}
+
+print_warning() {
+  local mesg=$1; shift
+  printf "${YELLOW}=> WARNING:${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
+}
+
+print_msg1() {
+  local mesg=$1; shift
+  printf "${GREEN}==> ${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
+}
+
+print_msg2() {
+  local mesg=$1; shift
+  printf "${BLUE}  ->${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
+}
+
+print_error() {
+  local mesg=$1; shift
+  printf "${RED}==> ERROR:${ALL_OFF}${BOLD} ${mesg}${ALL_OFF}\n" "$@" >&2
+}
