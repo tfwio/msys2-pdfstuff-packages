@@ -19,6 +19,6 @@ a few un-official PDF related `PKGBUILD` scripts for msys2
 | mupdf-git | [mupdf] @ [4792d16][mupdf-git-commit] | [mupdf-1.11] | [jbig2dec]
 
 
-- SEE: [doc/tmi.md](.doc/tmi.md) for some build/install instructions.
+- SEE: [.doc/tmi.md](.doc/tmi.md) for some build/install instructions.
 - Other: mingw-w64-mupdf & mingw-w64-mujs are compiled against tar packages via curl ~mupdf-v1.8
 - PoDoFo is supported by official msys2 archive (so no longer needed here)
