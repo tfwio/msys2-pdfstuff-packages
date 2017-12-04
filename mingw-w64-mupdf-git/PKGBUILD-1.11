@@ -1,6 +1,6 @@
 # Maintainer: Thomas Wroble <tfwroble@gmail.com>
 # Packager: tfw
-_realname=mupdf-git ; MY_JBG='https://tfw.io/Mu/jbig2dec' ; MY_SRC='https://tfw.io/Mu/mupdf' ; jbig=jbig2dec
+_realname=mupdf-git ; JBIG2DEC_HTTP='https://github.com/ArtifexSoftware/jbig2dec' ; MY_SRC='https://github.com/ArtifexSoftware/mupdf' ; jbig=jbig2dec
 pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
 pkgver=1.11
 pkgrel=0
@@ -10,7 +10,7 @@ url='http://mupdf.com'
 license=('GPL3')
 source=("${_realname}"::"git+${MY_SRC}#tag=1.11"
         #https://<host>/<user>/jbig2dec/commit/9d2c4f3bdb0bd003deae788e7187c0f86e624544
-        "${jbig}"::"git+${MY_JBG}#commit=9d2c4f3bdb0bd003deae788e7187c0f86e624544"
+        "${jbig}"::"git+${JBIG2DEC_HTTP}#commit=9d2c4f3bdb0bd003deae788e7187c0f86e624544"
         "000-Makethird.patch"
         #"001-gitmodules.patch"
         #"002-scripts--cmapdump.patch"

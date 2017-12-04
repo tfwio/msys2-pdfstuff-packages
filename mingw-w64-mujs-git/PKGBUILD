@@ -2,7 +2,7 @@
 # - owner       Artifex Software, Inc.
 # - last change Thu, 11 Dec 2014 09:45:04 -0600 (16:45 +0100)
 # - URL         git://git.ghostscript.com/mujs.git
-_realname=mujs ; pkg_nam=${_realname}-git ; pkg_url="git+https://tfw.io/Mu/mujs"
+_realname=mujs ; pkg_nam=${_realname}-git ; pkg_url="git+https://github.com/ArtifexSoftware/mujs"
 pkgver=r535.41625ec
 pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
 pkgrel=1
